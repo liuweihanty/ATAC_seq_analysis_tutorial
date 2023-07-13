@@ -112,7 +112,6 @@ reverse:  <br>
           
     **run_job.sh** This is the script that performs the actual analysis for each sample. The input are fastq files, and it will output:<br>
     *the aligned and filtered bam file <br>
-    *bigwig files for each individual replicate <br>
     *individual bigwig files for each replicate, each sample <br>
     *MACS2 called peaks in narrowpeak format <br>
 
