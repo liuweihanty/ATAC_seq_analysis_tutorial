@@ -3,9 +3,7 @@
  - [Demo data](#demo_data)
  - [Analysis workflow](#analysis_workflow)
  - [Step by step analysis](#Step_by_step_analysis)
- - [Other situations](#Other_situations) 
-    - [Single end sequencing analysis](#single_end_sequencing_analysis)
-    - [Broad peak calling](#Broad_peak_calling)
+
   
 ## Introduction <br>
 This tutorial walks step-by-step tutorial of analysis pipeline for ATAC-seq. ATAC-seq are usually paired end sequenced.
@@ -53,16 +51,16 @@ reverse:  <br>
      * **/CD34_HSC_ATAC/input** $~~~$ trimmed fastqs
      * **/CD34_HSC_ATAC/output** $~~~$ the analysis output
      * **/CD34_HSC_ATAC/logs** $~~~$ the error and output records files for debugging
-     * **/CD34_HSC_ATAC/scripts** $~~~$ the analysis scripts
-  Your working directory should look like this by now:
-     <img src="https://github.com/liuweihanty/ChIP_analysis_tutorial/blob/7064d2d19c974fa2adacc081f888f956b49ce070/figures/working_directory_before_run.png" alt="repo_demo" width="350" height="200">
+     * **/CD34_HSC_ATAC/scripts** $~~~$ the analysis scripts <br>
+  
+  Your working directory should look like this by now: <br>
+     <img src="https://github.com/liuweihanty/ATAC_seq_analysis_tutorial/blob/main/figures/ATAC_working_directory_demo.png" alt="repo_demo" width="350" height="200">
 
            
 * ### Set up the job running scripts
      Now that we have the adaptor trimmed fastqs, it's time to proceeed to next steps. In the flow chart above, we finished steps 1 and 2 so far. Step 3 to 6 will be implemented in an automated workflow, which is organized into two bash scripts: <br>
     * **job_submission.sh**: this script specify and select the two fastq files(forward and reverse reads) for each sample, and send the fastqs to the "run_job.sh" script below
     * **run_job.sh**:  this scripts takes in the forward and reverse fastqs for each sample from the job_submission.sh file above, and performs steps 3-6 in the flow chart on each sample (except IDR analysis), in a paralelled fashion( all samples will be simutaneously analyzed), so no matter how many samples you have, you just need to run once. <br>
-
    
     Now let's take a look inside of an example of each file and I will explain what each code chunk do: <br>
     
@@ -71,22 +69,24 @@ reverse:  <br>
     
     #!/bin/bash
     
-    #PBS -N CD34_CUX1_CnR
+    #PBS -N CD34_CUX1_ATAC
     #PBS -S /bin/bash
     #PBS -l walltime=24:00:00
     #PBS -l nodes=1:ppn=8
     #PBS -l mem=32gb
-    #PBS -o /gpfs/data/mcnerney-lab/.../CD34_CUX1_CnR/logs/run_CnR_wrapper.out
-    #PBS -e /gpfs/data/mcnerney-lab/.../CD34_CUX1_CnR/logs/run_CnR_wrapper.err
+    #PBS -o /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.out
+    #PBS -e /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.err
     
     date
     module load gcc/6.2.0
     
-    #this for loop will take the input fastq files and run the scripts for all of them one pair after another
+    
     
     #change directory to where your input fastqs are stored
-    fastq_file_location=/gpfs/data/mcnerney-lab/.../CD34_CUX1_CnR/input/adaptor_trimmed_fastqs
-    cd $fastq_file_location
+    input_folder=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/input
+    cd $input_folder
+    
+    #this for loop will take the input fastq files and run the scripts for all of them one pair after another
     
     for i in $(ls *R1*.gz)
     do
@@ -94,9 +94,12 @@ reverse:  <br>
     echo $i
     echo $otherfilename
     
-    qsub -v input_folder=$fastq_file_location,fq_F=$i,fq_R=$otherfilename,-macs2,-p 0.1 /gpfs/data/mcnerney-lab/.../CD34_CUX1_CnR/logs/scripts/run_job.sh
+    
+    #here you need to specify whether to perform macs2 peak calling by include the -macs2 flag or not. If you include, you need to specify either -p or -q significance threshold followed by a number. Do not specify both p and q values
+    
+    qsub -v fq_location=$input_folder,fq_F=$i,fq_R=$otherfilename,-macs2,-p=0.1 /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/scripts/run_job.sh 
           
-    done
+    done  
     
     ```
     * **Important**: Within the job_submission.sh file in the last line qsub,  you have the choice of specifying whether to run macs2 peak calling step. There are three mandatory flags in the qsub command:
@@ -107,7 +110,7 @@ reverse:  <br>
     **run_job.sh** This is the script that performs the actual analysis for each sample. The input are fastq files, and it will output:<br>
     *the aligned and filtered bam file <br>
     *bigwig files for each individual replicate <br>
-    *normalized mean bigwig file across the two replicates <br>
+    *individual bigwig files for each replicate, each sample <br>
     *MACS2 called peaks in narrowpeak format <br>
 
     **You don't need to modify anything for this script** <br>
