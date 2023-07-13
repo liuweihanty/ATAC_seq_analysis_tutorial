@@ -133,17 +133,20 @@ reverse:  <br>
     * Now let's run IDR
       ```
       ##Sort your narrowPeak files by the -log10(p-value) column
-      sort -k8,8nr CD34_CUX1_CnR_rep1.narrowPeak > CD34_CUX1_CnR_rep1.sorted.narrowPeak
-      sort -k8,8nr CD34_CUX1_CnR_rep2.narrowPeak > CD34_CUX1_CnR_rep2.sorted.narrowPeak
+      sort -k8,8nr rep1.narrowPeak > rep1.sorted.narrowPeak <br>
+      sort -k8,8nr rep2.narrowPeak > rep2.sorted.narrowPeak <br>
+      
       ##retain the top 250k peaks
+      head -n 250000 rep1.sorted.narrowPeak > rep1.sorted.top250k.narrowPeak <br>
+      head -n 250000 rep2.sorted.narrowPeak > rep2.sorted.top250k.narrowPeak <br>
       
       ##run idr
-      idr --samples CD34_CUX1_CnR_rep1.sorted.narrowPeak CD34_CUX1_CnR_rep2.sorted.narrowPeak \
+      idr --samples rep1.sorted.top250k.narrowPeak rep2.sorted.top250k.narrowPeak \
           --input-file-type narrowPeak \
           --rank p.value \
-          --output-file CD34_CUX1_CnR_idr \
+          --output-file sample_name_idr \
           --plot \
-          --log-output-file CD34_CUX1_CnR.idr.log
-     * The output file CD34_CUX1_CnR.idr contains the consensus peaks across the two replicates. For a detailed explanantion of what columns are inside, please see [HBC training](https://hbctraining.github.io/Intro-to-ChIPseq/lessons/07_handling-replicates-idr.html). What we care about here is column 5, which contains the scaled IDR value = -125*log2(IDR) For example, peaks with an IDR of 0.1 have a score of 415, peaks with an IDR of 0.05 have a score of int(-125log2(0.05)) = 540.
+          --log-output-file sample_name.idr.log
+     * The output file contains the consensus peaks across the two replicates. For a detailed explanantion of what columns are inside, please see [HBC training](https://hbctraining.github.io/Intro-to-ChIPseq/lessons/07_handling-replicates-idr.html). What we care about here is column 5, which contains the scaled IDR value = -125*log2(IDR) For example, peaks with an IDR of 0.1 have a score of 415, peaks with an IDR of 0.05 have a score of int(-125log2(0.05)) = 540.
      * Use this command to filter out peaks with IDR < 0.05 and compile to a bed file. This is the final file that contains your consensus peaks.
-       ``` awk '{if($5 >= 540) print $0}' CD34_CUX1_CnR_idr > CD34_CUX1_CnR_idr_005.bed ``` 
+       ``` awk '{if($5 >= 540) print $0}' idr_result > idr_result.bed ``` 
