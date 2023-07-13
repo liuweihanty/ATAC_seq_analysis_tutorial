@@ -1,4 +1,4 @@
-# Table of contents <br>
+## Table of contents <br>
  - [Introduction](#introduction)
  - [Demo data](#demo_data)
  - [Analysis workflow](#analysis_workflow)
