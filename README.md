@@ -48,12 +48,12 @@ reverse:  <br>
 * ### (Optional) Run fastqcr again to ensure the adaptors are successfully removed
   
 * ### Set up your working directory. (the demo example folder names are written in parenthesis)
-  * create your project folder. **/CD34_CUX1_CnR/**
+  * create your project folder. **/CD34_HSC_ATAC/**
   * create four sub-folders underneath your project folder
-     * **/CD34_CUX1_CnR/input** $~~~$ trimmed fastqs
-     * **/CD34_CUX1_CnR/output** $~~~$ the analysis output
-     * **/CD34_CUX1_CnR/logs** $~~~$ the error and output records files for debugging
-     * **/CD34_CUX1_CnR/scripts** $~~~$ the analysis scripts
+     * **/CD34_HSC_ATAC/input** $~~~$ trimmed fastqs
+     * **/CD34_HSC_ATAC/output** $~~~$ the analysis output
+     * **/CD34_HSC_ATAC/logs** $~~~$ the error and output records files for debugging
+     * **/CD34_HSC_ATAC/scripts** $~~~$ the analysis scripts
   Your working directory should look like this by now:
      <img src="https://github.com/liuweihanty/ChIP_analysis_tutorial/blob/7064d2d19c974fa2adacc081f888f956b49ce070/figures/working_directory_before_run.png" alt="repo_demo" width="350" height="200">
 
