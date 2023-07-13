@@ -33,7 +33,7 @@ reverse:  <br>
 
 
 ## Analysis workflow
-![GitHub Logo](https://github.com/liuweihanty/ChIP_analysis_tutorial/blob/main/figures/ChIP_CnR_workflow_chart.png)
+![GitHub Logo](https://github.com/liuweihanty/ATAC_seq_analysis_tutorial/blob/main/figures/ATAC_analysis_flow_chart.png)
 
 ## Step by step analysis
 * ### Run fastqc 
