@@ -68,7 +68,7 @@ reverse:  <br>
     ```bash
     
     #!/bin/bash
-    
+ 
     #PBS -N CD34_CUX1_ATAC
     #PBS -S /bin/bash
     #PBS -l walltime=24:00:00
@@ -82,9 +82,11 @@ reverse:  <br>
     
     
     
-    #change directory to where your input fastqs are stored
-    input_folder=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/input
-    cd $input_folder
+    #specify your project directory
+    project_dir=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC
+    
+    #change directory to where the fastq files are
+    cd $project_dir/input
     
     #this for loop will take the input fastq files and run the scripts for all of them one pair after another
     
@@ -97,9 +99,10 @@ reverse:  <br>
     
     #here you need to specify whether to perform macs2 peak calling by include the -macs2 flag or not. If you include, you need to specify either -p or -q significance threshold followed by a number. Do not specify both p and q values
     
-    qsub -v fq_location=$input_folder,fq_F=$i,fq_R=$otherfilename,-macs2,-p=0.1 /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/scripts/run_job.sh 
-          
-    done  
+    qsub -v project_path=$project_dir,fq_F=$i,fq_R=$otherfilename,-macs2,-p=0.1 $project_dir/scripts/run_job.sh 
+   
+           
+     done  
     
     ```
     * **Important**: Within the job_submission.sh file in the last line qsub,  you have the choice of specifying whether to run macs2 peak calling step. There are three mandatory flags in the qsub command:
