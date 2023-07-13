@@ -11,7 +11,7 @@ This tutorial walks step-by-step tutorial of analysis pipeline for ATAC-seq. ATA
 ## Demo data
 I will be using an example data set to illustrate this workflow. This is a paired-end ATAC-seq on human CD34+ HSPC investigating the effect of loss of CUX1 on chromatin accessibility in human HSPC. There are two consitions: gHPRT ctrl and gCUX1 CUX1-knockout. There are two replicates per condition. Note for here the fastqs are already adaptor trimmed. In reality you need to trim the adaptor first <br>
 
-gHPRT
+gHPRT <br>
 rep1 <br>
 forward: ATAC_CD34_CTRL_R1_rep1_TRIMMED.fastq.gz <br> 
 reverse: ATAC_CD34_CTRL_R2_rep1_TRIMMED.fastq.gz <br> 
@@ -20,7 +20,7 @@ rep2 <br>
 forward:  <br> 
 reverse: <br> 
 
-gCUX1
+gCUX1 <br>
 rep1 <br>
 forward: ATAC_CD34_KD_R1_rep1_TRIMMED.fastq.gz <br> 
 reverse: ATAC_CD34_KD_R2_rep1_TRIMMED.fastq.gz <br> 
@@ -132,6 +132,8 @@ reverse:  <br>
       ##Sort your narrowPeak files by the -log10(p-value) column
       sort -k8,8nr CD34_CUX1_CnR_rep1.narrowPeak > CD34_CUX1_CnR_rep1.sorted.narrowPeak
       sort -k8,8nr CD34_CUX1_CnR_rep2.narrowPeak > CD34_CUX1_CnR_rep2.sorted.narrowPeak
+      ##retain the top 250k peaks
+      
       ##run idr
       idr --samples CD34_CUX1_CnR_rep1.sorted.narrowPeak CD34_CUX1_CnR_rep2.sorted.narrowPeak \
           --input-file-type narrowPeak \
