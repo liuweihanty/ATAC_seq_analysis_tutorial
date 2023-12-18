@@ -17,8 +17,8 @@ forward: ATAC_CD34_CTRL_R1_rep1_TRIMMED.fastq.gz <br>
 reverse: ATAC_CD34_CTRL_R2_rep1_TRIMMED.fastq.gz <br> 
 
 rep2 <br>
-forward:  <br> 
-reverse: <br> 
+forward: ATAC_CD34_CTRL_R1_rep2_TRIMMED.fastq.gz <br> 
+reverse: ATAC_CD34_CTRL_R2_rep2_TRIMMED.fastq.gz <br>  
 
 gCUX1 <br>
 rep1 <br>
@@ -26,8 +26,8 @@ forward: ATAC_CD34_KD_R1_rep1_TRIMMED.fastq.gz <br>
 reverse: ATAC_CD34_KD_R2_rep1_TRIMMED.fastq.gz <br> 
 
 rep2 <br>
-forward:  <br> 
-reverse:  <br> 
+forward: ATAC_CD34_KD_R1_rep2_TRIMMED.fastq.gz <br> 
+reverse: ATAC_CD34_KD_R2_rep2_TRIMMED.fastq.gz <br> 
 
 
 ## Analysis workflow
@@ -66,24 +66,9 @@ reverse:  <br>
     
     **job_submission.sh** For each sample, this script below find the forward read(R1) fastq file, and subsequently locate the reverse read(R2) file for that same sample(it can do so because the fastq file names you got from the sequencing core differ only in "R1" and "R2" part for the file name). This script essently locate the forward and reverse reads fastq files parallelly for each sample, and feed them into the "run_jobs.sh" file to run all the analysis steps. **What you need to do**: change all the directory path to your project directory.
     ```bash
-    
     #!/bin/bash
- 
-    #PBS -N CD34_CUX1_ATAC
-    #PBS -S /bin/bash
-    #PBS -l walltime=24:00:00
-    #PBS -l nodes=1:ppn=8
-    #PBS -l mem=32gb
-    #PBS -o /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.out
-    #PBS -e /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.err
-    
-    date
-    module load gcc/6.2.0
-    
-    
-    
-    #specify your project directory
-    project_dir=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC
+    #specify your project directory,change for different analysis
+    project_dir=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC 
     
     #change directory to where the fastq files are
     cd $project_dir/input
@@ -97,18 +82,24 @@ reverse:  <br>
     echo $otherfilename
     
     
-    #here you need to specify whether to perform macs2 peak calling by include the -macs2 flag or not. If you include, you need to specify either -p or -q significance threshold followed by a number. Do not specify both p and q values
+    #here you can specify whether to run MACS2 peak calling and the p value threshold, these two parameters will be passed along to the run_job.sh file
+    #whether to run macs2, if you include this flag, the problem will run macs2 peak caller, if not, the program will skip macs2.
+    run_macs2=true
+    #p value for macs2. Use p value as the significant thrshold and specify it to be 0.1 if you are running IDR.
+    p_value=0.1  # Adjust as needed
     
-    qsub -v project_path=$project_dir,fq_F=$i,fq_R=$otherfilename,-macs2,-p=0.1 $project_dir/scripts/run_job.sh 
-   
-           
-     done  
+    sbatch --job-name=run_ATAC_wrapper --time=12:00:00 \
+           -o $project_dir/logs/run_ATAC_seq.out \
+           -e $project_dir/logs/run_ATAC_seq.err \
+           --partition=tier2q \
+           --nodes=1 \
+           --ntasks-per-node=8 \
+           --mem-per-cpu=10000 \
+           --wrap="sh $project_dir/scripts/run_job.sh $i $otherfilename $run_macs2 $p_value $project_dir"
+      
+    done
     
     ```
-    * **Important**: Within the job_submission.sh file in the last line qsub,  you have the choice of specifying whether to run macs2 peak calling step. There are three mandatory flags in the qsub command:
-        * -macs2: whether to run macs2, if you include this flag, the problem will run macs2 peak caller, if not, the program will skip macs2.
-        * -p: p value for macs2. Use p value as the significant thrshold and specify it to be 0.1 if you are running IDR.
-        * -q: q value for macs2. If you are not running IDR (eg you just have one rep), use this adjusted p value for macs2 instead. Only specify either p or q, not both!
           
     **run_job.sh** This is the script that performs the actual analysis for each sample. The input are fastq files, and it will output:<br>
     *the aligned and filtered bam file <br>
@@ -123,7 +114,7 @@ reverse:  <br>
   
 * ### Run the job
     *change directory to the scripts folder that contains your job_submission.sh and run_job.sh file, type in ``` chmod +x * ```, this give execution rights to your scripts <br>
-    * type in ```./job_submission.sh``` and the job should start to run
+    * type in ```sbatch ./job_submission.sh``` and the job should start to run
 
 
 * ### IDR analysis (If you chose to run macs2)
