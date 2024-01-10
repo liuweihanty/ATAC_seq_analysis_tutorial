@@ -1,55 +1,18 @@
 #!/bin/bash
-#This scrip takes the forward and reverse read fastq files of ChIP Seq/CnR, runs FastQC, bwa alignment, and samtool filtering 
-
-#PBS -N run_CD34_ATAC
-#PBS -S /bin/bash
-#PBS -l walltime=24:00:00
-#PBS -l nodes=1:ppn=8
-#PBS -l mem=32gb
-#PBS -o /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_seq.out
-#PBS -e /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_seq.err
-
 
 #specify the input fastq files
-echo $fq_F
-echo $fq_R
-echo $project_path
-
-#specify default values
-p_value=0.1
-q_value=0.1
-run_macs2=false
-
-# Parse command-line arguments
-while [[ $# -gt 0 ]]; do
-    key="$1"
-
-    case $key in
-        -macs2)
-            run_macs2=true
-            ;;
-        -p)
-            p_value="$2"
-            shift
-            ;;
-        -q)
-            q_value="$2"
-            shift
-            ;;
-        *)
-            echo "Unknown option: $key"
-            exit 1
-            ;;
-    esac
-    shift
-done
+fq_F=$1
+fq_R=$2
+run_macs2=$3
+p_value=$4
+project_dir=$5
 
 
 #specify the location of reference genome fast file for bwa mem
-GENOME_FASTA=/gpfs/data/mcnerney-lab/mcnerney/reference/hg19/hg19_Ordered.fa
+GENOME_FASTA=/gpfs/data/mcnerney-lab/reference_genomes_CUX1_CASP_diff/FASTA_files/hg19/hg19_Ordered.fa
 
-#specify the path to the blasklist file
-blacklist=/gpfs/data/mcnerney-lab/liuweihan/chip_seq/Human_CD34_HSC_Cut_Run_Jeff/hg19-blacklist.v2.bed
+#specify the dir to the blasklist file
+blacklist=/gpfs/data/mcnerney-lab/reference_genomes_CUX1_CASP_diff/blacklists/hg19-blacklist.v2.bed
 
 #grab base name of the fastq files
 base=`basename $fq_F .fastq.gz`
@@ -61,36 +24,36 @@ cores=8
 
 
 #create all the output directories
-# The -p option means mkdir will create the whole path if it does not exist and refrain from complaining if it does exist
+# The -p option means mkdir will create the whole dir if it does not exist and refrain from complaining if it does exist
 
-mkdir -p $project_path/output/bwa
-mkdir -p $project_path/output/bigwigs
+mkdir -p $project_dir/output/bwa
+mkdir -p $project_dir/output/bigwigs
 
 
 # set up output filenames and locations
 
-bwa_mem_out=$project_path/output/bwa/${base}.sam
+bwa_mem_out=$project_dir/output/bwa/${base}.sam
 
-samtools_q30_in=$project_path/output/bwa/${base}.sam
-samtools_q30_out=$project_path/output/bwa/${base}.q30.bam
+samtools_q30_in=$project_dir/output/bwa/${base}.sam
+samtools_q30_out=$project_dir/output/bwa/${base}.q30.bam
 
-samtools_sort_in=$project_path/output/bwa/${base}.q30.bam
-samtools_sort_out=$project_path/output/bwa/${base}.q30.srt.bam
+samtools_sort_in=$project_dir/output/bwa/${base}.q30.bam
+samtools_sort_out=$project_dir/output/bwa/${base}.q30.srt.bam
 
-samtools_dedup_in=$project_path/output/bwa/${base}.q30.srt.bam
-samtools_dedup_out=$project_path/output/bwa/${base}.q30.srt.dedup.bam
+samtools_dedup_in=$project_dir/output/bwa/${base}.q30.srt.bam
+samtools_dedup_out=$project_dir/output/bwa/${base}.q30.srt.dedup.bam
 
-samtools_noMITO_in=$project_path/output/bwa/${base}.q30.srt.dedup.bam
-samtools_noMITO_out=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.bam
+samtools_noMITO_in=$project_dir/output/bwa/${base}.q30.srt.dedup.bam
+samtools_noMITO_out=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.bam
 
-bedtools_rm_blacklist_in=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.bam
-bedtools_rm_blacklist_out=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
+bedtools_rm_blacklist_in=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.bam
+bedtools_rm_blacklist_out=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
 
-bam_to_bed_in=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
-bam_to_bed_out=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bed
+bam_to_bed_in=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
+bam_to_bed_out=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bed
 
-bamCoverage_in=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
-bamCoverage_out=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bw
+bamCoverage_in=$project_dir/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bam
+bamCoverage_out=$project_dir/output/bigwigs/${base}.q30.srt.dedup.noMITO.blkrm.bw
 
 #run the jobs
 
@@ -98,10 +61,11 @@ bamCoverage_out=$project_path/output/bwa/${base}.q30.srt.dedup.noMITO.blkrm.bw
 #genome alignment
 echo "Run bwa mem"
 
-cd $project_path/input
+cd $project_dir/input
 
-module load gcc/6.2.0
-module load intel/2017
+module load gcc/12.1.0
+module load intel/2022.2
+module load llvm/14.0.5
 module load bwa/0.7.17
 
 
@@ -116,8 +80,10 @@ $fq_R \
 #filter and clean bam files
 echo "Run samtools filter"
 
-module load gcc/6.2.0
-module load samtools/1.10
+module load gcc/12.1.0
+module load intel/2022.2
+module load llvm/14.0.5
+module load samtools/1.17
 
 #q30 filtering
 samtools view -bSh -q 30 -o $samtools_q30_out $samtools_q30_in
@@ -135,8 +101,11 @@ samtools view -h $samtools_noMITO_in | awk '{if($3 != "chrM" && $3 != "chrUn"){p
 samtools index $samtools_noMITO_out
 
 echo "run bedtools to remove blacklist regions from bam files"
-module load gcc/6.2.0
-module load bedtools/2.29.0
+
+module load gcc/12.1.0
+module load intel/2022.2
+module load llvm/14.0.5
+module load bedtools/2.30.0
 
 bedtools intersect -abam $bedtools_rm_blacklist_in -b $blacklist -v > $bedtools_rm_blacklist_out
 
@@ -155,38 +124,41 @@ samtools index $bedtools_rm_blacklist_out
 #you need deepTools for this, and deepTools could be called on as long as you loaded the correct python version, so you don't need to load deepTools separately.
 echo "generating bigwig files"
 
-module load gcc/6.2.0
-module load python/3.8.1
+module load gcc/12.1.0
+module load intel/2022.2
+module load llvm/14.0.5
+module load bedtools/2.30.0
+module load python/3.10.5
 
 bamCoverage -b $bamCoverage_in -o $bamCoverage_out
 
 
 
 #macs2 peak calling
+#macs2 peak calling
 if [[ $run_macs2=true ]]; then
 
     echo "Running macs2 analysis"
 
-    # Check if -p or -q are specified
-    if [[ -z $p_value ]] && [[ -z $q_value ]]; then
-        echo "Error: Either -p or -q option must be specified with -macs2."
+    # Check if p value is specified
+    if [[ -z $p_value ]]; then
+        echo "Error: p value must be specified with -macs2."
         exit 1
     fi
  
-    mkdir -p $project_path/output/macs2
-    macs2_outdir=$project_path/output/macs2
-    module load gcc/6.2.0
-    module load intel/2017
-    module load python/2.7.13
-    module load macs2/2.1.0
+    mkdir -p $project_dir/output/macs2
+    macs2_outdir=$project_dir/output/macs2
 
-    if [[ -n $p_value ]]; then
-        echo "-p $p_value"
-        macs2 callpeak -t $bam_to_bed_out \
+    module load gcc/12.1.0
+    module load intel/2022.2
+    module load llvm/14.0.5
+    module load python/3.10.5
+
+    macs2 callpeak -t $bam_to_bed_out \
                        -f BED \
                        -g hs \
                        -n $base \
-		       --nomodel \
+                       --nomodel \
                        --shift -75 \
                        --extsize 150 \
                        --call-summits \
@@ -194,26 +166,13 @@ if [[ $run_macs2=true ]]; then
                        -B \
                        --outdir $macs2_outdir
 
-    elif [[ -n $q_value ]]; then
-        echo "-q $q_value"
-        macs2 callpeak -t $bam_to_bed_out \
-                       -f BED \
-                       -g hs \
-                       -n $base \
-		       --nomodel \
-                       --shift -75 \
-                       --extsize 150 \
-                       --call-summits \
-                       -q $q_value \
-                       -B \
-                       --outdir $macs2_outdir
-    else
-        echo "No parameter (-p or -q) specified."
-        exit 1
-    fi
 
 else
     echo "Skipping the macs2 peak calling analysis. You can run it separately"
 fi
+
+
+
+
 
 
