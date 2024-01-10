@@ -1,21 +1,6 @@
-
 #!/bin/bash
-
-#PBS -N CD34_CUX1_ATAC
-#PBS -S /bin/bash
-#PBS -l walltime=24:00:00
-#PBS -l nodes=1:ppn=8
-#PBS -l mem=32gb
-#PBS -o /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.out
-#PBS -e /gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC/logs/run_ATAC_wrapper.err
-
-date
-module load gcc/6.2.0
-
-
-
-#specify your project directory
-project_dir=/gpfs/data/mcnerney-lab/NGS_analysis_tutorials/ATAC_seq/CD34_HSC_ATAC
+#specify your project directory,change for different analysis
+project_dir=/gpfs/data/mcnerney-lab/Tanner/TCM264
 
 #change directory to where the fastq files are
 cd $project_dir/input
@@ -29,8 +14,19 @@ echo $i
 echo $otherfilename
 
 
-#here you need to specify whether to perform macs2 peak calling by include the -macs2 flag or not. If you include, you need to specify either -p or -q significance threshold followed by a number. Do not specify both p and q values
+#here you can specify whether to run MACS2 peak calling and the p value threshold, these two parameters will be passed along to the run_job.sh file
+#whether to run macs2, if you include this flag, the problem will run macs2 peak caller, if not, the program will skip macs2.
+run_macs2=true
+#p value for macs2. Use p value as the significant thrshold and specify it to be 0.1 if you are running IDR.
+p_value=0.1  # Adjust as needed
 
-qsub -v project_path=$project_dir,fq_F=$i,fq_R=$otherfilename,-macs2,-p=0.1 $project_dir/scripts/run_job.sh 
-      
+sbatch --job-name=run_ATAC_wrapper --time=12:00:00 \
+       -o $project_dir/logs/run_ATAC_seq.out \
+       -e $project_dir/logs/run_ATAC_seq.err \
+       --partition=tier2q \
+       --nodes=1 \
+       --ntasks-per-node=8 \
+       --mem-per-cpu=10000 \
+       --wrap="sh $project_dir/scripts/run_job.sh $i $otherfilename $run_macs2 $p_value $project_dir"
+  
 done
